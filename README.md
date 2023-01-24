@@ -168,3 +168,132 @@ public class JpaMain {
 ```
 
 ![](img/img_4.png)![](img/img_5.png)![](img/img_6.png)
+
+# 실전 예제 - 2. 연관관계 매핑 시작
+
+**테이블 설계**
+
+---
+
+![](img/img_2.png)
+
+- 실전 예제 1과 테이블 구조는 동일
+
+**객체 구조**
+
+---
+
+- 참조를 사용하도록 변경
+
+![](img/img_7.png)
+
+- **Member 엔티티에 orders(주문 목록)가 존재하는데 잘못된 설계 방식이라고 한다.**
+  - 양방향 매핑 예시를 위해 어쩔 수없이 사용함
+  - Member 엔티티는 회원에 관련된 멤버 변수만 가지고 있으면 된다.
+- **설계할 때는 객체들 간에 매핑을 단방향으로 하고 실제 개발할 때 필요시 양방향으로 적용하는게 좋다.**
+- 즉 양방향보단 단방향을 지향한다.
+
+*Member*
+
+```java
+@Entity
+public class Member {
+
+    @Id @GeneratedValue
+    @Column(name = "MEMBER_ID")
+    private Long id;
+
+    @OneToMany(mappedBy = "member")
+    private List<Order> orders = new ArrayList<>();
+
+    private String name;
+
+    private String city;
+
+    private String street;
+
+    private String zipcode;
+
+    //Getter, Setter...
+}
+```
+
+- 관례상 멤버 변수가 컬렉션 클래스일때는 new(객체 생성)를 사용해서 초기화를 해준다. 메모리를 좀 쓸 수 있지만 NPE도 방지하고 여러가지 장점이 있다.
+
+*Order*
+
+```java
+@Entity
+@Table(name = "ORDERS")
+public class Order {
+
+    @Id @GeneratedValue
+    @Column(name = "ORDER_ID")
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "MEMBER_ID")
+    private Member member;
+
+    @OneToMany(mappedBy = "order")
+    private List<OrderItem> orderItems = new ArrayList<>();
+
+    private LocalDateTime orderDate;
+
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
+
+    public void addOrderItem(OrderItem orderItem) {
+        orderItems.add(orderItem);
+        orderItem.setOrder(this);
+    }
+
+		//Getter, Setter...
+}
+```
+
+*OrderItem*
+
+```java
+@Entity
+public class OrderItem {
+
+    @Id @GeneratedValue
+    @Column(name = "ORDER_ITEM_ID")
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "ORDER_ID")
+    private Order order;
+
+    @ManyToOne
+    @JoinColumn(name = "ITEM_ID")
+    private Item item;
+
+    private int orderPrice;
+
+    private int count;
+
+    //Getter, Setter...
+}
+```
+
+*Item*
+
+```java
+@Entity
+public class Item {
+
+    @Id @GeneratedValue
+    @Column(name = "ITEM_ID")
+    private Long id;
+
+    private String name;
+
+    private int price;
+
+    private int stockQuantity;
+
+    //Getter, Setter...
+}
+```
