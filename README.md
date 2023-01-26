@@ -522,12 +522,12 @@ public class Category {
 
 - 다대일 관계 매핑
 
-| 속성 | 설명 | 기본값                                                          |
-| --- | --- |--------------------------------------------------------------|
-| optional | false로 설정하면 연관된 엔티티가 항상 있어야 한다. | TRUE                                                         |
-| fetch | 글로벌 페치 전략을 설정한다. | - @ManyToOne=FetchType.EAGER<br/>- @OneToOne=FetchType.LAZY |
-| cascade | 영속성 전이 기능을 사용한다. |                                                              |
-| targetEntity | 연관된 엔티티의 타입 정보를 설정한다. 이 기능은 거의 사용하지 않는다. 컬렉션을 사용해도 제네릭으로 타입 정보를 알 수 있다. |                                                              |
+| 속성 | 설명 | 기본값                                                     |
+| --- | --- |---------------------------------------------------------|
+| optional | false로 설정하면 연관된 엔티티가 항상 있어야 한다. | TRUE                                                    |
+| fetch | 글로벌 페치 전략을 설정한다.| @ManyToOne=FetchType.EAGER<br/>@OneToOne=FetchType.LAZY |
+| cascade | 영속성 전이 기능을 사용한다. |                                                         |
+| targetEntity | 연관된 엔티티의 타입 정보를 설정한다. 이 기능은 거의 사용하지 않는다. 컬렉션을 사용해도 제네릭으로 타입 정보를 알 수 있다. |                                                         |
 
 **@OneToMany - 주요 속성**
 
@@ -538,7 +538,7 @@ public class Category {
 | 속성 | 설명 | 기본값 |
 | --- | --- | --- |
 | mappedBy | 연관관계의 주인 필드를 선택한다. |  |
-| fetch | 글로벌 페치 전략을 설정한다. | - @ManyToOne=FetchType.EAGER<br/>- @OneToMany=FetchType.LAZY |
+| fetch | 글로벌 페치 전략을 설정한다. | @ManyToOne=FetchType.EAGER<br/>@OneToMany=FetchType.LAZY |
 | cascade | 영속성 전이 기능을 사용한다. |  |
 | targetEntity | 연관된 엔티티의 타입 정보를 설정한다. 이 기능은 거의 사용하지 않는다. 컬렉션을 사용해도 제네릭으로 타입 정보를 알 수 있다. |  |
 - `@OneToMany`는 mappedBy 속성을 가지고 있지만, `@ManyToOne`은 가지고 있지않다.
