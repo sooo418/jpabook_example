@@ -323,6 +323,176 @@ public class Item {
 
 ![](img/img_10.png)
 
+*Member*
+
+```java
+@Entity
+public class Member {
+
+    @Id @GeneratedValue
+    @Column(name = "MEMBER_ID")
+    private Long id;
+
+    @OneToMany(mappedBy = "member")
+    private List<Order> orders = new ArrayList<>();
+
+    private String name;
+
+    private String city;
+
+    private String street;
+
+    private String zipcode;
+
+    //Getter, Setter...
+}
+```
+
+*Order*
+
+```java
+@Entity
+@Table(name = "ORDERS")
+public class Order {
+
+    @Id @GeneratedValue
+    @Column(name = "ORDER_ID")
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "MEMBER_ID")
+    private Member member;
+
+    @OneToOne
+    @JoinColumn(name = "DELIVERY_ID")
+    private Delivery delivery;
+
+    @OneToMany(mappedBy = "order")
+    private List<OrderItem> orderItems = new ArrayList<>();
+
+    private LocalDateTime orderDate;
+
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
+
+    //Getter, Setter...
+}
+```
+
+*Delivery*
+
+```java
+@Entity
+public class Delivery {
+
+    @Id @GeneratedValue
+    private Long id;
+
+    private String city;
+    private String street;
+    private String zipcode;
+    private DeliveryStatus status;
+
+    @OneToOne(mappedBy = "delivery")
+    private Order order;
+
+		//Getter, Setter...
+}
+```
+
+- `Order` 테이블에 외래 키 `DELIVERY_ID`가 존재하므로 `Order`객체가 연관관계에서 주인이 된다.
+
+*OrderItem*
+
+```java
+@Entity
+public class OrderItem {
+
+    @Id @GeneratedValue
+    @Column(name = "ORDER_ITEM_ID")
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "ORDER_ID")
+    private Order order;
+
+    @ManyToOne
+    @JoinColumn(name = "ITEM_ID")
+    private Item item;
+
+    private int orderPrice;
+
+    private int count;
+
+    //Getter, Setter...
+}
+```
+
+*Item*
+
+```java
+@Entity
+public class Item {
+
+    @Id @GeneratedValue
+    @Column(name = "ITEM_ID")
+    private Long id;
+
+    private String name;
+
+    private int price;
+
+    private int stockQuantity;
+
+    @ManyToMany(mappedBy = "items")
+    private List<Category> categories = new ArrayList<>();
+		
+		//Getter, Setter...
+}
+```
+
+*Category*
+
+```java
+@Entity
+public class Category {
+
+    @Id @GeneratedValue
+    private Long id;
+
+    private String name;
+
+    @ManyToOne
+    @JoinColumn(name = "PARENT_ID")
+    private Category parent;
+
+    @OneToMany(mappedBy = "parent")
+    private List<Category> child = new ArrayList<>();
+
+    @ManyToMany
+    @JoinTable(name = "CATEGORY_ITEM",
+            joinColumns = @JoinColumn(name = "CATEGORY_ID"),
+            inverseJoinColumns = @JoinColumn(name = "ITEM_ID"))
+    private List<Item> items = new ArrayList<>();
+
+		//Getter, Setter...
+}
+```
+
+- `@ManyToMany`를 사용하며 `@JoinTable`을 사용해 `CATEGORY_ITEM` 이라는 테이블을 생성
+  - `CATEGORY_ITEM`에서 조인하는 컬럼(`joinColumns`)은 `CATEGORY_ID`이고, 반대쪽에서 조인해야 하는 컬럼(`inverseJoinColumns`)은 `ITEM_ID`이다 라고 명시를 해준다.
+
+*실행*
+
+![](img/img_11.png)
+
+![](img/img_12.png)
+
+![](img/img_13.png)
+
+- 위의 테이블 구조대로 테이블이 생성된걸 확인할 수 있다.
+- `CATEGORY_ITEM`이라는 중간 테이블이 생성되고 `CATEGORY_ITEM`, `ITEM_ID` 컬림이 생성된게 확인된다.
+
 **N:M 관계는 1:N, N:1로**
 
 ---
