@@ -915,3 +915,175 @@ Hibernate:
         values
             (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Book', ?)
 ```
+
+# 실전 예제 - 5. 연관관계 관리
+
+**글로벌 페치 전략 설정**
+
+---
+
+- 모든 연관관계를 지연 로딩으로 변경
+- `@ManyToOne`, `@OneToOne`은 기본이 즉시 로딩으므로 지연 로딩으로 변경
+
+*Category*
+
+```java
+import static javax.persistence.FetchType.LAZY;
+
+@Entity
+public class Category extends BaseEntity {
+
+    @Id @GeneratedValue
+    @Column(name = "CATEGORY_ID")
+    private Long id;
+
+    private String name;
+
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "PARENT_ID")
+    private Category parent;
+
+    @OneToMany(mappedBy = "parent")
+    private List<Category> child = new ArrayList<>();
+
+    @ManyToMany
+    @JoinTable(name = "CATEGORY_ITEM",
+            joinColumns = @JoinColumn(name = "CATEGORY_ID"),
+            inverseJoinColumns = @JoinColumn(name = "ITEM_ID"))
+    private List<Item> items = new ArrayList<>();
+}
+```
+
+*Delivery*
+
+```java
+import static javax.persistence.FetchType.LAZY;
+
+@Entity
+public class Delivery extends BaseEntity {
+
+    @Id @GeneratedValue
+    @Column(name = "DELIVERY_ID")
+    private Long id;
+
+    private String city;
+    private String street;
+    private String zipcode;
+    private DeliveryStatus status;
+
+    @OneToOne(mappedBy = "delivery", fetch = LAZY)
+    private Order order;
+}
+```
+
+*Order*
+
+```java
+import static javax.persistence.FetchType.LAZY;
+
+@Entity
+@Table(name = "ORDERS")
+public class Order extends BaseEntity {
+
+    @Id @GeneratedValue
+    @Column(name = "ORDER_ID")
+    private Long id;
+
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "MEMBER_ID")
+    private Member member;
+
+    @OneToOne(fetch = LAZY)
+    @JoinColumn(name = "DELIVERY_ID")
+    private Delivery delivery;
+
+    @OneToMany(mappedBy = "order")
+    private List<OrderItem> orderItems = new ArrayList<>();
+
+    private LocalDateTime orderDate;
+
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
+
+    public void addOrderItem(OrderItem orderItem) {
+        orderItems.add(orderItem);
+        orderItem.setOrder(this);
+    }
+}
+```
+
+*OrderItem*
+
+```java
+import static javax.persistence.FetchType.LAZY;
+
+@Entity
+public class OrderItem extends BaseEntity {
+
+    @Id @GeneratedValue
+    @Column(name = "ORDER_ITEM_ID")
+    private Long id;
+
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "ORDER_ID")
+    private Order order;
+
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "ITEM_ID")
+    private Item item;
+
+    private int orderPrice;
+
+    private int count;
+}
+```
+
+- `@ManyToOne`, `@OneToOne`모두 `fetch = FetchType.LAZY` 적용
+  - import static 을 사용해서 `FetchType.LAZY` 를 `LAZY`로 사용
+
+**영속성 전이 설정**
+
+---
+
+- Order → Delivery를 영속성 전이 ALL 설정
+- Order → OrderItem을 영속성 전이 ALL 설정
+
+*Order*
+
+```java
+import static javax.persistence.CascadeType.ALL;
+import static javax.persistence.FetchType.LAZY;
+
+@Entity
+@Table(name = "ORDERS")
+public class Order extends BaseEntity {
+
+    @Id @GeneratedValue
+    @Column(name = "ORDER_ID")
+    private Long id;
+
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "MEMBER_ID")
+    private Member member;
+
+    @OneToOne(fetch = LAZY, cascade = ALL)
+    @JoinColumn(name = "DELIVERY_ID")
+    private Delivery delivery;
+
+    @OneToMany(mappedBy = "order", cascade = ALL)
+    private List<OrderItem> orderItems = new ArrayList<>();
+
+    private LocalDateTime orderDate;
+
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
+
+    public void addOrderItem(OrderItem orderItem) {
+        orderItems.add(orderItem);
+        orderItem.setOrder(this);
+    }
+}
+```
+
+- `cascade = CascadeType.ALL`적용
+  - FetchType과 같이 import static 을 사용해서 `ALL`로 표시
