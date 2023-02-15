@@ -1087,3 +1087,104 @@ public class Order extends BaseEntity {
 
 - `cascade = CascadeType.ALL`적용
   - FetchType과 같이 import static 을 사용해서 `ALL`로 표시
+
+# 실전 예제 - 6. 값 타입 매핑
+
+![](img/img_17.png)
+
+- `Member`와 `Delivery`에 있는 address를 Value Type으로 변경해서 사용 해 보겠다.
+
+*Address*
+
+```java
+@Embeddable
+public class Address {
+    @Column(length = 10)
+    private String city;
+    @Column(length = 20)
+    private String street;
+    @Column(length = 5)
+    private String zipcode;
+
+    public String fullAddress() {
+        return getCity() + " " + getStreet() + " " + getZipcode();
+    }
+
+    //Getter, Setter...
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Address address = (Address) o;
+        return Objects.equals(getCity(), address.getCity()) && Objects.equals(getStreet(), address.getStreet()) && Objects.equals(getZipcode(), address.getZipcode());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getCity(), getStreet(), getZipcode());
+    }
+}
+```
+
+- 값 타입의 장점
+  - `@Column(length = 10)` 컬럼의 길이 같은 속성들을 공통으로 관리 할 수 있다.
+  - `fullAddress()` 같은 의미있는 메소드를 만들어서 사용가능
+
+![](img/img_18.png)
+
+- 표시 해 놓은 옵션 선택하면 필드에 접근시 getter를 사용하여 접근한다.
+- 선택하지 않으면 필드에 직접 접근하는데 직접 접근 시 `프록시 객체`일 경우 `equals()` 또는 `hashCode()`에서 정상적으로 계산이 되지 않는다.
+- JPA에서는 프록시를 항상 고려해야 하기 때문에 `equals()` 나 `hashCode()` 뿐만 아니라 대부분의 코드를 getter를 사용하여 작성해야 한다.
+
+*Member*
+
+```java
+@Entity
+public class Member extends BaseEntity {
+
+    @Id @GeneratedValue
+    @Column(name = "MEMBER_ID")
+    private Long id;
+
+    private String name;
+
+    @Embedded
+    private Address address;
+
+    @OneToMany(mappedBy = "member")
+    private List<Order> orders = new ArrayList<>();
+
+    //Getter, Setter...
+}
+```
+
+*Delivery*
+
+```java
+@Entity
+public class Delivery extends BaseEntity {
+
+    @Id @GeneratedValue
+    @Column(name = "DELIVERY_ID")
+    private Long id;
+
+    @Embedded
+    private Address address;
+
+    private DeliveryStatus status;
+
+    @OneToOne(mappedBy = "delivery", fetch = LAZY)
+    private Order order;
+		
+    //Getter, Setter...
+}
+```
+
+*실행*
+
+![](img/img_19.png)
+
+![](img/img_20.png)
+
+- `Member`테이블과 `Delivery`테이블에 공통적으로 city, street, zipcode를 컬럼으로 가진채 생성된다.
